@@ -1,0 +1,5 @@
+# Nested git repo (tracked separately at DogInfantry/india-ai-public-equity-landscape)
+repo/
+
+# Superpowers ephemeral server state
+.superpowers/
