@@ -54,7 +54,12 @@
       "Bash(/c/Users/Anklesh/anaconda3/envs/fin_lab/python.exe -m pytest tests/test_reporting.py -v --tb=short)",
       "Bash(gh auth:*)",
       "Bash(git checkout:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh --version)",
+      "Bash(git --version)",
+      "Bash(curl --version)",
+      "Bash(git config:*)"
     ]
   }
 }
