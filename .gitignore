@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+.env
+.DS_Store
+
+# Local caches and generated runtime artifacts
+.cache/
+tmp/
+data/*_latest.csv
+reports/figures/
+
+# Streamlit
+.streamlit/secrets.toml
