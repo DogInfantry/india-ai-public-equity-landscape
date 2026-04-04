@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 from src.data_loader import download_price_history, get_basic_fundamentals, load_universe
 
 TRADING_DAYS = 252
+RISK_FREE_ANNUAL = 0.065  # India 10Y G-Sec approximate
 DEFAULT_BENCHMARK_TICKER = "^NSEI"
 
 
@@ -98,10 +99,33 @@ def summarize_price_history(
             "max_drawdown": max_drawdown(closes),
             "data_source": ", ".join(sorted(history["source"].dropna().unique())) if not history.empty else None,
         }
+        # --- Sharpe and Sortino ---
+        _sharpe = None
+        _sortino = None
+        if not closes.empty:
+            _daily = closes.pct_change().dropna()
+            if len(_daily) >= 30:
+                _ann_ret = float(_daily.mean() * TRADING_DAYS)
+                _rf_daily = RISK_FREE_ANNUAL / TRADING_DAYS
+                _excess = _daily - _rf_daily
+                _vol = float(_daily.std() * np.sqrt(TRADING_DAYS))
+                if _vol > 0:
+                    _sharpe = float((_excess.mean() * TRADING_DAYS) / _vol)
+                _downside = np.minimum(_daily.values, 0.0)
+                _dd_dev = float(np.sqrt(np.mean(_downside ** 2)) * np.sqrt(TRADING_DAYS))
+                if _dd_dev > 0:
+                    _sortino = float((_ann_ret - RISK_FREE_ANNUAL) / _dd_dev)
+        metrics["sharpe"] = _sharpe
+        metrics["sortino"] = _sortino
         metrics.update(fundamentals_by_ticker.get(row.ticker, {}))
         results.append(metrics)
 
-    return pd.DataFrame(results)
+    df = pd.DataFrame(results)
+    # Preserve Python None (not np.nan) for sharpe/sortino so callers can do `is None` checks.
+    for _col in ("sharpe", "sortino"):
+        if _col in df.columns:
+            df[_col] = df[_col].astype(object).where(df[_col].notna(), other=None)
+    return df
 
 
 def fetch_fundamentals(universe: pd.DataFrame) -> pd.DataFrame:
