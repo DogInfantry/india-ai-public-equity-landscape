@@ -97,4 +97,4 @@ tests/          pytest test suite for all new analytics and reporting functions
 
 ## Disclaimer
 
-This repository is for educational and portfolio-use purposes only. It is not investment advice, not a research product, and not affiliated with Morgan Stanley. All data sourced from public APIs at runtime.
+This repository is for educational and portfolio-use purposes only. It is not investment advice, not a research product. All data sourced from public APIs at runtime.
