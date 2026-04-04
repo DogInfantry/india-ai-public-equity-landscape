@@ -326,6 +326,8 @@ def _normalize_dividend_yield(dividend_yield: float | None) -> float | None:
         return None
     if dividend_yield > 1:
         return dividend_yield / 100.0
+    if dividend_yield > 0.20:
+        return dividend_yield / 100.0
     return dividend_yield
 
 
