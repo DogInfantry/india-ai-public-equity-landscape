@@ -23,14 +23,38 @@ The repo is designed to feel like a realistic internal work sample rather than a
   Markdown export helpers for slide-ready pitch output and internal notes.
 - `src/app.py`
   Streamlit front end for the advisor idea engine.
+- `src/visuals.py`
+  Saved chart, scorecard, heatmap, and HTML visual generation.
 - `reports/ai_india_thematic_pitch.md`
   Generated thematic pitch output.
 - `reports/ai_idea_engine_notes.md`
   Generated idea-engine notes.
+- `reports/ai_india_visual_summary.md`
+  Generated visual gallery with static charts and interactive HTML links.
+
+## Visual gallery
+
+The repo now includes saved visuals in `reports/figures/` so the work sample is easy to skim without opening notebooks.
+
+The visual pack includes:
+
+- indexed performance versus the NIFTY 50
+- full-universe 1Y return distribution
+- AI-purity theme map
+- risk / return bubble chart
+- segment market-cap chart
+- cross-archetype idea-engine heatmap
+- one-page scorecard graphic
+
+Open `reports/ai_india_visual_summary.md` after generating the figures for a quick visual walkthrough.
+
+![AI x India Scorecard](reports/figures/ai_india_scorecard.png)
+
+![AI x India Theme Map](reports/figures/ai_india_theme_map.png)
 
 ## Universe design
 
-The stock universe in `data/ai_india_universe.csv` is curated from public “AI stocks in India” lists and market commentary used only as guidance for company selection, including sources such as Bajaj Finserv, Smallcase, Motilal Oswal, and INDmoney. The repo does not scrape or copy those write-ups.
+The stock universe in `data/ai_india_universe.csv` is curated from public "AI stocks in India" lists and market commentary used only as guidance for company selection, including sources such as Bajaj Finserv, Smallcase, Motilal Oswal, and INDmoney. The repo does not scrape or copy those write-ups.
 
 The universe intentionally mixes:
 
@@ -106,6 +130,14 @@ Running all cells will:
 - refresh `reports/ai_idea_engine_notes.md`
 - refresh the optional local cache `data/ai_india_stats_latest.csv`
 
+Generate the saved visual pack:
+
+```powershell
+& 'C:\Users\Anklesh\anaconda3\python.exe' src\visuals.py
+```
+
+That command writes PNG and HTML artifacts into `reports/figures/` plus a gallery page at `reports/ai_india_visual_summary.md`.
+
 Run the Streamlit app:
 
 ```powershell
@@ -125,9 +157,9 @@ The app allows an advisor to:
 - `notebooks/`
   End-user analysis notebooks for the thematic pitch and advisor engine.
 - `src/`
-  Reusable Python modules for data, analysis, scoring, reporting, and the Streamlit app.
+  Reusable Python modules for data, analysis, scoring, reporting, visuals, and the Streamlit app.
 - `reports/`
-  Generated markdown outputs that can be reused as deck notes or internal briefing material.
+  Generated markdown outputs and figure artifacts that can be reused as deck notes or briefing material.
 
 ## Verification completed in this build
 

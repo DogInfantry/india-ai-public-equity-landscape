@@ -192,8 +192,19 @@ def make_valuation_scatter(
     stats: pd.DataFrame,
     valuation_column: str = "trailing_pe",
     return_column: str = "cagr_3y",
+    title: str = "Valuation vs. 3Y CAGR",
+    x_label: str | None = None,
+    y_label: str | None = None,
 ) -> go.Figure:
     chart_data = stats.dropna(subset=[valuation_column, return_column]).copy()
+    default_labels = {
+        "trailing_pe": "Trailing P/E",
+        "price_to_book": "Price / Book",
+        "ai_purity_score": "AI Purity Score",
+        "cagr_3y": "3Y CAGR",
+        "return_1y": "1Y Return",
+        "annualized_volatility": "Annualized Volatility",
+    }
     figure = px.scatter(
         chart_data,
         x=valuation_column,
@@ -201,10 +212,10 @@ def make_valuation_scatter(
         color="segment",
         hover_name="name",
         size="market_cap",
-        title="Valuation vs. 3Y CAGR",
+        title=title,
         labels={
-            valuation_column: "Trailing P/E",
-            return_column: "3Y CAGR",
+            valuation_column: x_label or default_labels.get(valuation_column, valuation_column.replace("_", " ").title()),
+            return_column: y_label or default_labels.get(return_column, return_column.replace("_", " ").title()),
             "market_cap": "Market Cap",
         },
     )
