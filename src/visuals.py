@@ -400,55 +400,74 @@ def save_interactive_html(
     return {"indexed_html": indexed_html, "theme_map_html": theme_map_html}
 
 
-def build_visual_summary_markdown(as_of_date: str, figure_paths: dict[str, Path], stats: pd.DataFrame) -> str:
-    median_1y = stats["return_1y"].median()
-    median_3y = stats["cagr_3y"].median()
-    top_cagr = stats.nlargest(3, "cagr_3y")[["name", "cagr_3y"]]
-    top_cagr_text = ", ".join(f"{row.name} ({row.cagr_3y:.1%})" for row in top_cagr.itertuples())
-    highest_purity = stats.nlargest(3, "ai_purity_score")[["name", "ai_purity_score"]]
-    purity_text = ", ".join(f"{row.name} ({row.ai_purity_score:.2f})" for row in highest_purity.itertuples())
+def build_visual_summary_markdown(as_of_date: str, figure_paths: dict, stats: pd.DataFrame) -> str:
+    _stats = stats.copy()
+    _stats["return_1y"] = pd.to_numeric(_stats["return_1y"], errors="coerce")
+    _stats["cagr_3y"] = pd.to_numeric(_stats["cagr_3y"], errors="coerce")
+    _stats["sharpe"] = pd.to_numeric(_stats.get("sharpe", pd.Series(dtype=float)), errors="coerce")
+    median_1y = _stats["return_1y"].median()
+    median_3y = _stats["cagr_3y"].median()
+    best_sharpe = _stats.dropna(subset=["sharpe"]).nlargest(1, "sharpe")
+    sharpe_leader = f"{best_sharpe.iloc[0]['name']} ({best_sharpe.iloc[0]['sharpe']:.2f})" if not best_sharpe.empty else "n/a"
 
-    return "\n".join(
-        [
-            "# AI x India Visual Summary",
-            "",
-            f"_As of {as_of_date}. Static visuals are generated from live public-market data and saved for recruiter-friendly review._",
-            "",
-            "## Key Stats",
-            f"- Universe size: {len(stats)} names",
-            f"- Median 1Y return: {median_1y:.1%}",
-            f"- Median 3Y CAGR: {median_3y:.1%}",
-            f"- Top 3 trailing 3Y CAGR names: {top_cagr_text}",
-            f"- Highest AI-purity names: {purity_text}",
-            "",
-            "## Visual Pack",
-            "### Scorecard",
-            "![AI x India Scorecard](figures/ai_india_scorecard.png)",
-            "",
-            "### Indexed Performance",
-            "![AI x India Indexed Performance](figures/ai_india_indexed_performance.png)",
-            "",
-            "### 1Y Return Distribution",
-            "![AI x India 1Y Return Distribution](figures/ai_india_1y_return_bar.png)",
-            "",
-            "### Theme Map",
-            "![AI x India Theme Map](figures/ai_india_theme_map.png)",
-            "",
-            "### Risk / Return Map",
-            "![AI x India Risk Return Map](figures/ai_india_risk_return_map.png)",
-            "",
-            "### Segment Market-Cap View",
-            "![AI x India Segment Market Cap](figures/ai_india_segment_market_cap.png)",
-            "",
-            "### Archetype Heatmap",
-            "![AI x India Archetype Heatmap](figures/ai_india_archetype_heatmap.png)",
-            "",
-            "## Interactive Files",
-            f"- Indexed performance HTML: `{figure_paths['indexed_html'].name}`",
-            f"- Theme map HTML: `{figure_paths['theme_map_html'].name}`",
-            "",
-        ]
-    ) + "\n"
+    return "\n".join([
+        "# AI x India Visual Summary",
+        "",
+        f"_As of {as_of_date}. Static visuals generated from live public-market data._",
+        "",
+        "## Key Stats",
+        f"- Universe size: {len(stats)} names",
+        f"- Median 1Y return: {median_1y:.1%}",
+        f"- Median 3Y CAGR: {median_3y:.1%}",
+        f"- Best Sharpe ratio: {sharpe_leader}",
+        "",
+        "## Visual Pack",
+        "",
+        "### One-Page Scorecard",
+        "![Scorecard](figures/ai_india_scorecard.png)",
+        "_The fastest overview of the universe — size, median returns, top compounders at a glance._",
+        "",
+        "### Sharpe / Return Scatter",
+        "![Sharpe Return](figures/ai_india_sharpe_return.png)",
+        "_Look for names in the top-right quadrant: high return AND high Sharpe. Those are genuine risk-adjusted compounders, not just momentum plays._",
+        "",
+        "### Correlation Heatmap",
+        "![Correlation Heatmap](figures/ai_india_correlation_heatmap.png)",
+        "_Red pairs are highly correlated — owning both is effectively one concentrated position. Blue pairs provide genuine diversification._",
+        "",
+        "### Efficient Frontier",
+        "![Efficient Frontier](figures/ai_india_efficient_frontier.png)",
+        "_Each dot is a portfolio. The gold star is the maximum Sharpe portfolio; the blue star is the minimum volatility portfolio. Individual stocks are grey diamonds._",
+        "",
+        "### Drawdown Timeline",
+        "![Drawdown Timeline](figures/ai_india_drawdown_timeline.png)",
+        "_Shows which names are still underwater vs. which have fully recovered. A still-open drawdown changes how you size a position._",
+        "",
+        "### Indexed Performance",
+        "![Indexed Performance](figures/ai_india_indexed_performance.png)",
+        "_Representative names vs. NIFTY 50 rebased to 100. Shows how much of the return is alpha vs. beta._",
+        "",
+        "### 1Y Return Distribution",
+        "![1Y Returns](figures/ai_india_1y_return_bar.png)",
+        "_Full universe sorted by 1Y return. The spread is wide — this is a stock-picker's theme, not an index play._",
+        "",
+        "### Theme Map (AI Purity vs. CAGR)",
+        "![Theme Map](figures/ai_india_theme_map.png)",
+        "_X-axis: how central AI is to the business. Y-axis: trailing 3Y CAGR. Top-right = pure-play compounder._",
+        "",
+        "### Risk / Return Map",
+        "![Risk Return](figures/ai_india_risk_return_map.png)",
+        "_Volatility on x-axis, CAGR on y-axis. Ideal names are top-left: high return, low vol._",
+        "",
+        "### Segment Market Cap",
+        "![Segment Market Cap](figures/ai_india_segment_market_cap.png)",
+        "_Where the listed AI India screen has the most capital-market depth._",
+        "",
+        "### Archetype Heatmap",
+        "![Archetype Heatmap](figures/ai_india_archetype_heatmap.png)",
+        "_Same names, scored differently for each client archetype. A name strong across all archetypes is genuinely versatile._",
+        "",
+    ]) + "\n"
 
 
 def save_sharpe_return_scatter(stats: pd.DataFrame, output_dir: str | Path | None = None) -> Path:
