@@ -365,6 +365,15 @@ def summarize_price_history(
         results.append(metrics)
 
     df = pd.DataFrame(results)
+    # Ensure numeric metrics stay float64 even if all values in test data are None.
+    _numeric_cols = [
+        "last_close", "return_1y", "return_3y_total", "cagr_3y",
+        "momentum_6m", "momentum_12m", "annualized_volatility", "max_drawdown",
+        "history_years", "valuation_pe_percentile", "valuation_pb_percentile",
+    ]
+    for _col in _numeric_cols:
+        if _col in df.columns:
+            df[_col] = pd.to_numeric(df[_col], errors="coerce")
     # Preserve Python None (not np.nan) for float metrics so callers can do `is None` checks.
     for _col in ("sharpe", "sortino"):
         if _col in df.columns:

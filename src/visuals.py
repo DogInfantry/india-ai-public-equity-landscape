@@ -11,6 +11,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+from PIL import Image
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import PercentFormatter
 import numpy as np
@@ -54,6 +55,12 @@ def _ensure_figure_dir(output_dir: str | Path | None = None) -> Path:
 def _save_figure(fig: plt.Figure, path: Path) -> Path:
     fig.savefig(path, dpi=220, bbox_inches="tight", facecolor="white")
     plt.close(fig)
+    # Also save as JPG alongside the PNG
+    jpg_path = path.with_suffix(".jpg")
+    try:
+        Image.open(path).convert("RGB").save(jpg_path, quality=92)
+    except Exception:
+        pass  # JPG conversion is best-effort; don't break the pipeline
     return path
 
 
@@ -265,11 +272,15 @@ def save_segment_market_cap_png(stats: pd.DataFrame, output_dir: str | Path | No
 
 def save_scorecard_png(stats: pd.DataFrame, output_dir: str | Path | None = None) -> Path:
     output_path = _ensure_figure_dir(output_dir) / "ai_india_scorecard.png"
-    median_1y = stats["return_1y"].median()
-    median_3y = stats["cagr_3y"].median()
-    positive_3y = int((stats["cagr_3y"] > 0).sum())
-    high_purity = int((stats["ai_purity_score"] >= 0.85).sum())
-    top_cagr = stats.nlargest(3, "cagr_3y")["name"].tolist()
+    _stats = stats.copy()
+    _stats["cagr_3y"] = pd.to_numeric(_stats["cagr_3y"], errors="coerce")
+    _stats["return_1y"] = pd.to_numeric(_stats["return_1y"], errors="coerce")
+    _stats["ai_purity_score"] = pd.to_numeric(_stats["ai_purity_score"], errors="coerce")
+    median_1y = _stats["return_1y"].median()
+    median_3y = _stats["cagr_3y"].median()
+    positive_3y = int((_stats["cagr_3y"] > 0).sum())
+    high_purity = int((_stats["ai_purity_score"] >= 0.85).sum())
+    top_cagr = _stats.nlargest(3, "cagr_3y")["name"].tolist()
     largest_name = stats.nlargest(1, "market_cap")["name"].iloc[0]
 
     fig = plt.figure(figsize=(11.2, 6.8), facecolor="white")
@@ -311,6 +322,8 @@ def save_scorecard_png(stats: pd.DataFrame, output_dir: str | Path | None = None
         fontsize=11,
         color=COLOR_PALETTE["navy"],
     )
+    pdf_path = output_path.with_suffix(".pdf")
+    fig.savefig(pdf_path, bbox_inches="tight", facecolor="white")
     return _save_figure(fig, output_path)
 
 
@@ -438,6 +451,198 @@ def build_visual_summary_markdown(as_of_date: str, figure_paths: dict[str, Path]
     ) + "\n"
 
 
+def save_sharpe_return_scatter(stats: pd.DataFrame, output_dir: str | Path | None = None) -> Path:
+    output_path = _ensure_figure_dir(output_dir) / "ai_india_sharpe_return.png"
+    chart_data = stats.dropna(subset=["sharpe"]).copy()
+    chart_data["_return"] = chart_data["cagr_3y"].fillna(chart_data["return_1y"])
+    chart_data = chart_data.dropna(subset=["_return", "market_cap"])
+
+    segment_colors = _segment_color_lookup(chart_data["segment"])
+    bubble_sizes = np.sqrt(chart_data["market_cap"] / 1e9) * 10
+
+    fig, ax = plt.subplots(figsize=(11, 7))
+    for segment, subset in chart_data.groupby("segment"):
+        idx = subset.index
+        ax.scatter(
+            subset["_return"],
+            subset["sharpe"],
+            s=bubble_sizes.loc[idx],
+            alpha=0.78,
+            color=segment_colors[segment],
+            edgecolor="white",
+            linewidth=0.8,
+            label=segment,
+        )
+
+    median_ret = float(chart_data["_return"].median())
+    ax.axvline(median_ret, color="#AABBCC", linewidth=1.0, linestyle="--", zorder=0)
+    ax.axhline(1.0, color="#AABBCC", linewidth=1.0, linestyle="--", zorder=0)
+
+    x_min, x_max = ax.get_xlim()
+    y_min, y_max = ax.get_ylim()
+    for label, x, y in [
+        ("High Return\nHigh Quality", x_max * 0.85, max(y_max * 0.85, 1.1)),
+        ("High Return\nHigh Risk", x_max * 0.85, min(y_min * 0.5, 0.9)),
+        ("Low Return\nHigh Quality", x_min * 0.5, max(y_max * 0.85, 1.1)),
+        ("Low Return\nHigh Risk", x_min * 0.5, min(y_min * 0.5, 0.9)),
+    ]:
+        ax.text(x, y, label, fontsize=8, color="grey", style="italic", ha="center", va="center")
+
+    try:
+        from adjustText import adjust_text
+        texts = [ax.text(row["_return"], row["sharpe"], row["ticker"].replace(".NS", ""), fontsize=7)
+                 for _, row in chart_data.iterrows()]
+        adjust_text(texts, ax=ax)
+    except ImportError:
+        for _, row in chart_data.iterrows():
+            ax.annotate(row["ticker"].replace(".NS", ""), (row["_return"], row["sharpe"]),
+                        xytext=(0.005, 0.02), textcoords="offset points", fontsize=7)
+
+    _apply_axis_style(
+        ax,
+        "Sharpe / Return Map",
+        "Top-right = high return AND high risk-adjusted quality. Bubble size = market cap.",
+    )
+    ax.set_xlabel("Annualized Return (3Y CAGR or 1Y)")
+    ax.set_ylabel("Sharpe Ratio")
+    ax.xaxis.set_major_formatter(PercentFormatter(1.0))
+    ax.legend(frameon=False, bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8)
+    return _save_figure(fig, output_path)
+
+
+def save_correlation_heatmap(
+    corr_matrix: pd.DataFrame,
+    stats: pd.DataFrame | None = None,
+    output_dir: str | Path | None = None,
+) -> Path:
+    output_path = _ensure_figure_dir(output_dir) / "ai_india_correlation_heatmap.png"
+
+    if stats is not None and "segment" in stats.columns:
+        order = stats.sort_values("segment")["ticker"].tolist()
+        order = [t for t in order if t in corr_matrix.columns]
+        corr_matrix = corr_matrix.loc[order, order]
+
+    n = len(corr_matrix)
+    fig, ax = plt.subplots(figsize=(max(8, n * 0.55), max(7, n * 0.5)))
+    im = ax.imshow(corr_matrix.values, cmap="RdBu_r", vmin=-1, vmax=1, aspect="auto")
+
+    ax.set_xticks(range(n))
+    ax.set_yticks(range(n))
+    labels = [t.replace(".NS", "") for t in corr_matrix.columns]
+    ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=8)
+    ax.set_yticklabels(labels, fontsize=8)
+
+    for row_i in range(n):
+        for col_j in range(n):
+            val = corr_matrix.values[row_i, col_j]
+            if not np.isnan(val):
+                ax.text(col_j, row_i, f"{val:.2f}", ha="center", va="center",
+                        fontsize=7, color="black" if abs(val) < 0.7 else "white")
+
+    plt.colorbar(im, ax=ax, shrink=0.8, label="Correlation")
+    _apply_axis_style(ax, "Return Correlation Matrix",
+                      "Red = highly correlated (concentrated risk). Blue = low correlation (diversified).")
+    ax.grid(False)
+    return _save_figure(fig, output_path)
+
+
+def save_drawdown_timeline(
+    price_history: pd.DataFrame,
+    stats: pd.DataFrame,
+    top_n: int = 8,
+    output_dir: str | Path | None = None,
+) -> Path:
+    output_path = _ensure_figure_dir(output_dir) / "ai_india_drawdown_timeline.png"
+    _stats = stats.copy()
+    _stats["sharpe"] = pd.to_numeric(_stats["sharpe"], errors="coerce")
+    ranked = _stats.dropna(subset=["sharpe"]).nlargest(top_n, "sharpe")
+    selected_tickers = ranked["ticker"].tolist()
+
+    fig, ax = plt.subplots(figsize=(12, 6.5))
+    colors = list(_segment_color_lookup(ranked["segment"]).values())
+
+    for i, ticker in enumerate(selected_tickers):
+        hist = (
+            price_history[price_history["ticker"] == ticker]
+            .assign(date=lambda df: pd.to_datetime(df["date"]))
+            .sort_values("date")
+            .set_index("date")["adj_close"]
+            .dropna()
+        )
+        if hist.empty:
+            continue
+        drawdown = hist / hist.cummax() - 1.0
+        label = ticker.replace(".NS", "")
+        color = colors[i % len(colors)]
+        ax.plot(drawdown.index, drawdown.values, label=label, linewidth=1.6, color=color)
+        ax.fill_between(drawdown.index, drawdown.values, 0, alpha=0.08, color=color)
+        trough_date = drawdown.idxmin()
+        ax.axvline(trough_date, color=color, linewidth=0.6, linestyle=":", alpha=0.6)
+
+    ax.axhline(0, color="#888888", linewidth=0.8)
+    _apply_axis_style(
+        ax,
+        "Drawdown From Peak — Top Names by Sharpe",
+        "Dotted vertical lines mark each ticker's worst drawdown date.",
+    )
+    ax.set_ylabel("Drawdown from Peak")
+    ax.yaxis.set_major_formatter(PercentFormatter(1.0))
+    ax.legend(frameon=False, bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8)
+    return _save_figure(fig, output_path)
+
+
+def save_efficient_frontier_chart(
+    frontier: dict,
+    stats: pd.DataFrame | None = None,
+    output_dir: str | Path | None = None,
+) -> Path:
+    output_path = _ensure_figure_dir(output_dir) / "ai_india_efficient_frontier.png"
+    sim = frontier["simulated"]  # shape (5000, 3): [vol, return, sharpe]
+
+    fig, ax = plt.subplots(figsize=(11, 7))
+
+    sc = ax.scatter(sim[:, 0], sim[:, 1], c=sim[:, 2], cmap="viridis",
+                    alpha=0.35, s=4, zorder=1)
+    plt.colorbar(sc, ax=ax, label="Sharpe Ratio", shrink=0.8)
+
+    if stats is not None:
+        stock_data = stats.dropna(subset=["sharpe"]).copy()
+        stock_data["_return"] = stock_data["cagr_3y"].fillna(stock_data["return_1y"])
+        stock_data = stock_data.dropna(subset=["_return"])
+        ax.scatter(stock_data["annualized_volatility"], stock_data["_return"],
+                   marker="D", color="grey", s=40, zorder=3, alpha=0.7, label="Individual stocks")
+        for _, row in stock_data.iterrows():
+            ax.annotate(row["ticker"].replace(".NS", ""),
+                        (row["annualized_volatility"], row["_return"]),
+                        xytext=(4, 4), textcoords="offset points", fontsize=7, color="grey")
+
+    if frontier["max_sharpe_stats"] and frontier["max_sharpe_weights"]:
+        ms = frontier["max_sharpe_stats"]
+        top3 = sorted(frontier["max_sharpe_weights"].items(), key=lambda x: -x[1])[:3]
+        label = "Max Sharpe\n" + ", ".join(f"{t.replace('.NS','')} {w:.0%}" for t, w in top3)
+        ax.scatter(ms["volatility"], ms["return"], marker="*", color=COLOR_PALETTE["gold"],
+                   s=400, zorder=5, label=label)
+
+    if frontier["min_vol_stats"] and frontier["min_vol_weights"]:
+        mv = frontier["min_vol_stats"]
+        top3 = sorted(frontier["min_vol_weights"].items(), key=lambda x: -x[1])[:3]
+        label = "Min Vol\n" + ", ".join(f"{t.replace('.NS','')} {w:.0%}" for t, w in top3)
+        ax.scatter(mv["volatility"], mv["return"], marker="*", color=COLOR_PALETTE["blue"],
+                   s=400, zorder=5, label=label)
+
+    _apply_axis_style(
+        ax,
+        "Efficient Frontier",
+        "Gold star = Maximum Sharpe portfolio. Blue star = Minimum Volatility portfolio.",
+    )
+    ax.set_xlabel("Annualized Volatility")
+    ax.set_ylabel("Annualized Return")
+    ax.xaxis.set_major_formatter(PercentFormatter(1.0))
+    ax.yaxis.set_major_formatter(PercentFormatter(1.0))
+    ax.legend(frameon=False, bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8)
+    return _save_figure(fig, output_path)
+
+
 def generate_visual_pack(
     start: str = "2021-01-01",
     output_dir: str | Path | None = None,
@@ -459,6 +664,18 @@ def generate_visual_pack(
         "archetype_heatmap_png": save_archetype_heatmap_png(scored, directory),
     }
     artifact_paths.update(save_interactive_html(price_history, benchmark_history, scored, directory))
+
+    from src.analysis import compute_correlation_matrix, compute_efficient_frontier
+    corr_matrix = compute_correlation_matrix(price_history)
+    frontier = compute_efficient_frontier(price_history)
+
+    artifact_paths["sharpe_return_png"] = save_sharpe_return_scatter(scored, directory)
+    artifact_paths["correlation_heatmap_png"] = save_correlation_heatmap(corr_matrix, scored, directory)
+    artifact_paths["drawdown_timeline_png"] = save_drawdown_timeline(price_history, scored, directory)
+    artifact_paths["efficient_frontier_png"] = save_efficient_frontier_chart(frontier, scored, directory)
+    artifact_paths["frontier_data"] = frontier
+    artifact_paths["corr_matrix"] = corr_matrix
+    artifact_paths["price_history"] = price_history
 
     summary_markdown = build_visual_summary_markdown(
         as_of_date=scored["as_of_date"].iloc[0],
