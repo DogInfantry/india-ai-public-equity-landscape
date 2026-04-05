@@ -1,5 +1,16 @@
 # AI x India: Public Equity Landscape
 
+[![Status](https://img.shields.io/badge/status-active-brightgreen)]()
+[![Domain](https://img.shields.io/badge/domain-public%20equities-blue)]()
+[![Theme](https://img.shields.io/badge/theme-AI%20investing-purple)]()
+[![Focus](https://img.shields.io/badge/focus-quant%20analysis-orange)]()
+[![Focus](https://img.shields.io/badge/focus-portfolio%20optimization-yellow)]()
+[![Metrics](https://img.shields.io/badge/metrics-sharpe%20%7C%20sortino%20%7C%20drawdown-red)]()
+[![Valuation](https://img.shields.io/badge/valuation-PE%20%7C%20PB%20percentiles-blueviolet)]()
+[![Tools](https://img.shields.io/badge/tools-python%20%7C%20streamlit%20%7C%20yfinance-black)]()
+[![Output](https://img.shields.io/badge/output-tearsheets%20%7C%20HTML%20report-success)]()
+[![License](https://img.shields.io/badge/license-MIT-lightgrey)]()
+
 > India's AI services sector is a structural multi-year opportunity.
 > This is the investment case — built on live market data, not consensus.
 
