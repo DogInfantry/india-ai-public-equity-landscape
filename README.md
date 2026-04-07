@@ -10,6 +10,7 @@
 [![Tools](https://img.shields.io/badge/tools-python%20%7C%20streamlit%20%7C%20yfinance-black)]()
 [![Output](https://img.shields.io/badge/output-tearsheets%20%7C%20HTML%20report-success)]()
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)]()
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen)](CONTRIBUTING.md)
 
 > India's AI services sector is a structural multi-year opportunity.
 > This is the investment case — built on live market data, not consensus.
@@ -29,6 +30,16 @@
 - A live thematic pitch on 20+ Indian AI/tech equities, built entirely on public market data
 - A scoring engine that ranks names differently depending on client risk profile (growth, income, thematic)
 - A full analytics suite: Sharpe/Sortino, drawdown tracking, portfolio optimization, valuation percentile
+
+## How to contribute
+
+This project is open to contributions from equity researchers, quants, and engineers.
+
+- Browse the **[Issues](../../issues)** tab for items labelled `good first issue` or `help wanted`
+- Read **[CONTRIBUTING.md](CONTRIBUTING.md)** for setup, coding style, and PR guidelines
+- Open an issue before working on something large — it helps avoid duplicated effort
+
+Contribution tracks: `track:data` · `track:analytics` · `track:app` · `track:infra`
 
 ## Read the research
 
