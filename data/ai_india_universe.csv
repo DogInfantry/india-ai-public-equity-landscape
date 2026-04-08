@@ -1,24 +1,24 @@
-ticker,name,segment,notes
-TCS.NS,Tata Consultancy Services Ltd,IT services,"Large-cap IT services leader building GenAI platforms, enterprise copilots, and industry AI delivery across BFSI, retail, and operations."
-INFY.NS,Infosys Ltd,IT services,"Broad-based IT services vendor with the Infosys Topaz AI suite, data engineering depth, and enterprise AI transformation programs."
-HCLTECH.NS,HCL Technologies Ltd,IT services,"Global IT and engineering-services player embedding GenAI, engineering R&D, and AI-led cloud modernization into enterprise contracts."
-WIPRO.NS,Wipro Ltd,IT services,"Large-cap IT services and consulting firm with AI360 offerings spanning software engineering, operations, and client-service automation."
-TECHM.NS,Tech Mahindra Ltd,IT services,"Telecom-heavy IT services company using AI across network operations, enterprise transformation, and digital engineering programs."
-LTIM.NS,LTIMindtree Ltd,IT services,"Scaled Indian IT services platform with data and AI consulting, enterprise modernization, and industry-specific AI deployments."
-PERSISTENT.NS,Persistent Systems Ltd,digital engineering,"High-growth software engineering specialist with strong AI, data engineering, cloud, and product development exposure."
-TATAELXSI.NS,Tata Elxsi Ltd,ER&D,"Design and engineering company with AI-led work in automotive software, media, healthcare imaging, and embedded intelligence."
-LTTS.NS,L&T Technology Services Ltd,ER&D,"Engineering R&D specialist benefiting from smart manufacturing, digital twins, embedded AI, and industrial automation."
-CYIENT.NS,Cyient Ltd,ER&D,"Engineering, geospatial, and digital transformation company using AI and ML in industrial, telecom, and transportation workflows."
-OFSS.NS,Oracle Financial Services Software Ltd,enterprise software,"Listed BFSI software platform with analytics, risk, anti-financial-crime, and core-banking automation exposure."
-BOSCHLTD.NS,Bosch Ltd,auto AI,"Indian listed Bosch entity with ADAS, connected mobility, industrial automation, and embedded software exposure."
-AFFLE.NS,Affle 3i Ltd,adtech/martech,"Consumer intelligence and ad-tech platform using machine learning for targeting, conversion, and fraud management."
-SAKSOFT.NS,Saksoft Ltd,analytics platform,"Mid-cap digital transformation and data analytics company focused on cloud, automation, and AI-enabled enterprise workflows."
-RATEGAIN.NS,RateGain Travel Technologies Ltd,analytics platform,"Travel and hospitality SaaS vendor using data science and AI for pricing, demand, and revenue optimization."
-NETWEB.NS,Netweb Technologies India Ltd,AI infrastructure,"Domestic HPC and server vendor positioned for AI compute, GPU clusters, and data-center infrastructure demand."
-ZENSARTECH.NS,Zensar Technologies Ltd,IT services,"Mid-cap IT services company with automation, AI engineering, and digital experience transformation capabilities."
-ECLERX.NS,eClerx Services Ltd,analytics/BPM,"Data-led BPM and analytics specialist with AI-enabled operations, customer analytics, and process automation."
-HAPPSTMNDS.NS,Happiest Minds Technologies Ltd,digital engineering,"Digital engineering and IT company with AI, analytics, cybersecurity, and cloud modernization exposure."
-KPITTECH.NS,KPIT Technologies Ltd,auto software,"Automotive software specialist with ADAS, autonomous, software-defined vehicle, and mobility intelligence exposure."
-BSOFT.NS,Birlasoft Ltd,IT services,"Enterprise digital and ERP services company layering GenAI, data, and cloud services into manufacturing and BFSI work."
-TATATECH.NS,Tata Technologies Ltd,ER&D,"Automotive and industrial engineering-services company exposed to digital engineering, smart manufacturing, and simulation-led design."
-MASTEK.NS,Mastek Ltd,enterprise software,"IT and digital engineering company with cloud modernization, data and AI, and public-sector transformation programs."
+ticker,name,segment,notes,ai_purity_override
+TCS.NS,Tata Consultancy Services Ltd,IT services,"Large-cap IT services leader building GenAI platforms, enterprise copilots, and industry AI delivery across BFSI, retail, and operations.",
+INFY.NS,Infosys Ltd,IT services,"Broad-based IT services vendor with the Infosys Topaz AI suite, data engineering depth, and enterprise AI transformation programs.",
+HCLTECH.NS,HCL Technologies Ltd,IT services,"Global IT and engineering-services player embedding GenAI, engineering R&D, and AI-led cloud modernization into enterprise contracts.",
+WIPRO.NS,Wipro Ltd,IT services,"Large-cap IT services and consulting firm with AI360 offerings spanning software engineering, operations, and client-service automation.",
+TECHM.NS,Tech Mahindra Ltd,IT services,"Telecom-heavy IT services company using AI across network operations, enterprise transformation, and digital engineering programs.",
+LTIM.NS,LTIMindtree Ltd,IT services,"Scaled Indian IT services platform with data and AI consulting, enterprise modernization, and industry-specific AI deployments.",
+PERSISTENT.NS,Persistent Systems Ltd,digital engineering,"High-growth software engineering specialist with strong AI, data engineering, cloud, and product development exposure.",
+TATAELXSI.NS,Tata Elxsi Ltd,ER&D,"Design and engineering company with AI-led work in automotive software, media, healthcare imaging, and embedded intelligence.",
+LTTS.NS,L&T Technology Services Ltd,ER&D,"Engineering R&D specialist benefiting from smart manufacturing, digital twins, embedded AI, and industrial automation.",
+CYIENT.NS,Cyient Ltd,ER&D,"Engineering, geospatial, and digital transformation company using AI and ML in industrial, telecom, and transportation workflows.",
+OFSS.NS,Oracle Financial Services Software Ltd,enterprise software,"Listed BFSI software platform with analytics, risk, anti-financial-crime, and core-banking automation exposure.",
+BOSCHLTD.NS,Bosch Ltd,auto AI,"Indian listed Bosch entity with ADAS, connected mobility, industrial automation, and embedded software exposure.",
+AFFLE.NS,Affle 3i Ltd,adtech/martech,"Consumer intelligence and ad-tech platform using machine learning for targeting, conversion, and fraud management.",
+SAKSOFT.NS,Saksoft Ltd,analytics platform,"Mid-cap digital transformation and data analytics company focused on cloud, automation, and AI-enabled enterprise workflows.",
+RATEGAIN.NS,RateGain Travel Technologies Ltd,analytics platform,"Travel and hospitality SaaS vendor using data science and AI for pricing, demand, and revenue optimization.",
+NETWEB.NS,Netweb Technologies India Ltd,AI infrastructure,"Domestic HPC and server vendor positioned for AI compute, GPU clusters, and data-center infrastructure demand.",
+ZENSARTECH.NS,Zensar Technologies Ltd,IT services,"Mid-cap IT services company with automation, AI engineering, and digital experience transformation capabilities.",
+ECLERX.NS,eClerx Services Ltd,analytics/BPM,"Data-led BPM and analytics specialist with AI-enabled operations, customer analytics, and process automation.",
+HAPPSTMNDS.NS,Happiest Minds Technologies Ltd,digital engineering,"Digital engineering and IT company with AI, analytics, cybersecurity, and cloud modernization exposure.",
+KPITTECH.NS,KPIT Technologies Ltd,auto software,"Automotive software specialist with ADAS, autonomous, software-defined vehicle, and mobility intelligence exposure.",
+BSOFT.NS,Birlasoft Ltd,IT services,"Enterprise digital and ERP services company layering GenAI, data, and cloud services into manufacturing and BFSI work.",
+TATATECH.NS,Tata Technologies Ltd,ER&D,"Automotive and industrial engineering-services company exposed to digital engineering, smart manufacturing, and simulation-led design.",
+MASTEK.NS,Mastek Ltd,enterprise software,"IT and digital engineering company with cloud modernization, data and AI, and public-sector transformation programs.",

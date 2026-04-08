@@ -51,7 +51,14 @@ def _ensure_yfinance_cache() -> None:
 
 
 def load_universe(path: str = "data/ai_india_universe.csv") -> pd.DataFrame:
-    """Load the curated AI x India stock universe."""
+    """Load the curated AI x India stock universe.
+
+    If the CSV contains an ``ai_purity_override`` column, rows with a non-null
+    value in that column will use that value as the final AI-purity score
+    instead of the deterministic segment + keyword logic in
+    :func:`src.scoring.derive_ai_purity_score`.  Rows without an override
+    (empty / NaN) are unaffected.
+    """
 
     csv_path = _resolve_path(path)
     universe = pd.read_csv(csv_path)
@@ -59,7 +66,60 @@ def load_universe(path: str = "data/ai_india_universe.csv") -> pd.DataFrame:
     missing_columns = required_columns.difference(universe.columns)
     if missing_columns:
         raise ValueError(f"Universe file is missing required columns: {sorted(missing_columns)}")
+
+    # Normalise the optional override column so downstream code can rely on it.
+    if "ai_purity_override" not in universe.columns:
+        universe["ai_purity_override"] = pd.NA
+    else:
+        universe["ai_purity_override"] = pd.to_numeric(
+            universe["ai_purity_override"], errors="coerce"
+        ).clip(lower=0.0, upper=1.0)
+
     return universe
+
+
+def load_candidates(
+    path: str = "data/ai_india_candidates.csv",
+    status_filter: list[str] | None = None,
+) -> pd.DataFrame:
+    """Load the AI x India candidate funnel.
+
+    Parameters
+    ----------
+    path:
+        Path to the candidates CSV, relative to the repository root or absolute.
+    status_filter:
+        Optional list of status values to keep (e.g. ``["candidate"]``).  When
+        ``None`` all rows are returned regardless of status.
+
+    Returns
+    -------
+    pd.DataFrame
+        Candidates table with at minimum the columns: ``ticker``, ``name``,
+        ``source_count``, ``segment_guess``, ``notes``, ``status``.
+        Returns an empty DataFrame when the file does not exist.
+    """
+
+    csv_path = _resolve_path(path)
+    if not csv_path.exists():
+        LOGGER.warning("Candidates file not found at %s; returning empty DataFrame.", csv_path)
+        return pd.DataFrame(
+            columns=["ticker", "name", "source_count", "segment_guess", "notes", "status"]
+        )
+
+    candidates = pd.read_csv(csv_path)
+    required_columns = {"ticker", "name", "status"}
+    missing_columns = required_columns.difference(candidates.columns)
+    if missing_columns:
+        raise ValueError(f"Candidates file is missing required columns: {sorted(missing_columns)}")
+
+    if status_filter is not None:
+        candidates = candidates[candidates["status"].isin(status_filter)].reset_index(drop=True)
+
+    if "source_count" in candidates.columns:
+        candidates["source_count"] = pd.to_numeric(candidates["source_count"], errors="coerce")
+
+    return candidates
 
 
 def _standardize_history_frame(df: pd.DataFrame, ticker: str, source: str) -> pd.DataFrame:
