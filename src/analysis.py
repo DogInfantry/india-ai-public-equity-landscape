@@ -67,12 +67,85 @@ def max_drawdown(series: pd.Series) -> float | None:
     return float(drawdowns.min())
 
 
+def compute_excess_returns(
+    stock_prices: pd.Series,
+    benchmark_prices: pd.Series,
+) -> pd.Series:
+    """Compute daily excess returns of a stock over a benchmark.
+
+    Both inputs are price series indexed by date.  The function aligns them on
+    their shared dates before computing returns so callers do not need to
+    pre-align.
+
+    Parameters
+    ----------
+    stock_prices:
+        Price series for the stock (any numeric dtype, date index).
+    benchmark_prices:
+        Price series for the benchmark (e.g. NIFTY IT, NIFTY 500).
+
+    Returns
+    -------
+    pd.Series
+        Daily excess return series (stock daily return minus benchmark daily
+        return) aligned on the intersection of both date indices.  Returns an
+        empty Series when fewer than two shared dates exist.
+    """
+    stock = pd.to_numeric(stock_prices, errors="coerce").dropna()
+    bench = pd.to_numeric(benchmark_prices, errors="coerce").dropna()
+
+    shared_index = stock.index.intersection(bench.index).sort_values()
+    if len(shared_index) < 2:
+        return pd.Series(dtype="float64")
+
+    stock_aligned = stock.loc[shared_index]
+    bench_aligned = bench.loc[shared_index]
+
+    stock_returns = stock_aligned.pct_change().dropna()
+    bench_returns = bench_aligned.pct_change().dropna()
+
+    common = stock_returns.index.intersection(bench_returns.index)
+    return (stock_returns.loc[common] - bench_returns.loc[common]).rename("excess_return")
+
+
+def compute_information_ratio(excess_returns: pd.Series) -> float | None:
+    """Compute annualised Information Ratio from a daily excess-return series.
+
+    IR = annualised mean excess return / annualised tracking error.
+
+    Uses TRADING_DAYS (252) for annualisation.
+
+    Parameters
+    ----------
+    excess_returns:
+        Daily excess return series produced by :func:`compute_excess_returns`
+        or any equivalent source.
+
+    Returns
+    -------
+    float or None
+        Annualised IR, or ``None`` when fewer than two observations are
+        available or tracking error is zero.
+    """
+    clean = pd.to_numeric(excess_returns, errors="coerce").dropna()
+    if len(clean) < 2:
+        return None
+
+    ann_mean = float(clean.mean() * TRADING_DAYS)
+    tracking_error = float(clean.std() * np.sqrt(TRADING_DAYS))
+
+    if tracking_error == 0.0 or np.isclose(tracking_error, 0.0):
+        return None
+
+    return ann_mean / tracking_error
+
+
 def compute_correlation_matrix(price_history: pd.DataFrame) -> pd.DataFrame:
     """
     Compute pairwise Pearson correlation of daily returns.
 
     Input:  Long-format DataFrame with columns ticker, date, adj_close.
-    Output: Square DataFrame (tickers × tickers), values in [-1, 1].
+    Output: Square DataFrame (tickers x tickers), values in [-1, 1].
             Tickers with < 30 overlapping return days produce NaN cells.
     """
     wide = (
@@ -91,7 +164,7 @@ def compute_valuation_percentile(
     lookback_years: int = 3,
 ) -> float | None:
     """
-    Returns percentile (0–100) of the current trailing multiple within its own history.
+    Returns percentile (0-100) of the current trailing multiple within its own history.
     Returns None if fewer than 4 quarters of data are available.
     Caches raw quarterly data to data/valuation_cache/ to avoid rate limits.
 
@@ -365,7 +438,6 @@ def summarize_price_history(
         results.append(metrics)
 
     df = pd.DataFrame(results)
-    # Ensure numeric metrics stay float64 even if all values in test data are None.
     _numeric_cols = [
         "last_close", "return_1y", "return_3y_total", "cagr_3y",
         "momentum_6m", "momentum_12m", "annualized_volatility", "max_drawdown",
@@ -374,11 +446,9 @@ def summarize_price_history(
     for _col in _numeric_cols:
         if _col in df.columns:
             df[_col] = pd.to_numeric(df[_col], errors="coerce")
-    # Preserve Python None (not np.nan) for float metrics so callers can do `is None` checks.
     for _col in ("sharpe", "sortino"):
         if _col in df.columns:
             df[_col] = df[_col].astype(object).where(df[_col].notna(), other=None)
-    # Preserve drawdown_recovery_days as Python int or None.
     if "drawdown_recovery_days" in df.columns:
         df["drawdown_recovery_days"] = pd.Series(
             [None if pd.isna(v) else int(v) for v in df["drawdown_recovery_days"]],
