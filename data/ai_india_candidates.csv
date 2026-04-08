@@ -1,0 +1,6 @@
+ticker,name,source_count,segment_guess,notes,status
+IBVENTURES.NS,Indiabulls Ventures Ltd,2,analytics platform,"Online brokerage and financial services platform building data and analytics capabilities for retail investors.",candidate
+GALAXYCOM.NS,Galaxy Cloud Kitchens Ltd,1,enterprise software,"Cloud kitchen operator exploring AI-driven demand forecasting and dynamic menu-pricing tools.",candidate
+NEWGEN.NS,Newgen Software Technologies Ltd,3,enterprise software,"Low-code digital transformation platform with AI-powered document processing, BPM, and customer engagement workflows.",candidate
+ONEMOBIKWIK.NS,MobiKwik Systems Ltd,2,analytics/BPM,"Fintech payments and BNPL platform using ML-based credit scoring, fraud detection, and personalisation.",candidate
+TATACOMM.NS,Tata Communications Ltd,3,AI infrastructure,"Global connectivity and cloud services company building AI networking, edge compute, and managed security offerings.",candidate
